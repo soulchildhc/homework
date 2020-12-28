@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+
+    <title>약사상담 신청</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .pharmacist {
+            width: 500px;
+            height: 700px;
+            background-image: url("https://www.chuksannews.co.kr/data/photos/tjtune/20190517/art_15580269241938.jpg");
+            background-position: center;
+            background-size: cover;
+        }
+
+        .price {
+            font-size: 16px;
+        }
+
+        .price {
+            width: 500px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .infor_box {
+            width: 500px;
+        }
+
+        .mybtn {
+            width: 100px;
+            margin: auto;
+            display: block;
+        }
+
+        .wrap {
+            margin: auto;
+            width: 500px;
+        }
+
+        .currency {
+            color: blue;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            $.ajax({
+                type: "GET",
+                url: "https://api.manana.kr/exchange/rate.json",
+                data: {},
+                success: function (response) {
+                    let nowrate = response[1]['rate']
+                    $('#box').text(nowrate)
+                }
+            })
+
+            $("#orders-box").html("");
+            showOrders();
+        });
+
+        function showOrders() {
+            $.ajax({
+                type: "GET",
+                url: "/order",
+                data: {},
+                success: function (response) {
+                    if (response["result"] == "success") {
+                        let orders = response["orders"];
+                        for (let i = 0; i < orders.length; i++) {
+                            makeOrder(orders[i]["name"], orders[i]["interest"], orders[i]["phone_number"], orders[i]["why"])
+                        }
+                        // alert(response["msg"]);
+                    } else {
+                        alert("상담정보를 받아오지 못했습니다");
+                    }
+                }
+            })
+        }
+
+        function makeOrder(name, interest, phone_number, why) {
+            let tempHtml = `<tr>
+                <td>${name}</td>
+                <td>${interest}</td>
+                <td>${phone_number}</td>
+                <td>${why}</td>
+            </tr>`;
+            $("#orders-box").append(tempHtml)
+        }
+
+        function order() {
+            let name = $('#name').val();
+            let interest = $('#interest').val();
+            let why = $('#why').val();
+            let phone_number = $('#phone_number').val()
+
+            if (name == '') {
+                alert("이름을 입력해주세요")
+            } else if (interest == '현재 먹거나 관심있는 영양제를 알려주세요') {
+                alert("관심있는 영양제를 알려주세요")
+            } else if (why == '') {
+                alert("상담 희망사유를 입력해주세요")
+            } else if (phone_number == '') {
+                alert("전화번호를 입력해주세요")
+            } else {
+                alert("상담접수가 완료되었습니다")
+            }
+            $.ajax({
+                type: "POST",
+                url: "/order",
+                data: {
+                    'name_give': name,
+                    'interest_give': interest,
+                    'why_give': why,
+                    'phone_number_give': phone_number,
+
+                },
+                success: function (response) {
+                    if (response["result"] == "success") {
+                        alert(response["msg"]);
+                        window.location.reload();
+                    }
+                }
+            })
+
+        }
+    </script>
+</head>
+<body>
+<div class="wrap">
+    <div class="pharmacist"></div>
+
+    <div class="price">
+        <h2>온라인으로 상담받으세요! <span class="price">가격: 1달러/회</span></h2>
+        <p>
+            현재 먹고있는 영양제에 대해 분석받고 나만의 영양제를 찾으세요! 간편한 온라인 약사상담으로 나만의 영양제 분석 리포트를 받을 수 있습니다.
+        </p>
+        <p class="currency">
+            달러-원 환율: <span id="box">1000</span>
+        </p>
+    </div>
+
+    <div class="infor_box">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-default">주문자 이름</span>
+            </div>
+            <input id="name" type="text" class="form-control" aria-label="Default"
+                   aria-describedby="inputGroup-sizing-default">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <label class="input-group-text">관심분야</label>
+            </div>
+            <select class="custom-select" id="interest">
+                <option selected>현재 먹거나 관심있는 영양제를 알려주세요</option>
+                <option value="1">피로 회복</option>
+                <option value="2">미용/피부</option>
+                <option value="3">면역/두뇌활동</option>
+            </select>
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-default">상담 희망사유</span>
+            </div>
+            <input id="why" type="text" class="form-control" aria-label="Default"
+                   aria-describedby="inputGroup-sizing-default">
+        </div>
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-default">전화번호</span>
+            </div>
+            <input id="phone_number" type="text" class="form-control" aria-label="Default"
+                   aria-describedby="inputGroup-sizing-default">
+        </div>
+        <button onclick="order()" type="button" class="btn btn-primary mybtn">상담하기</button>
+    </div>
+
+    <div class="orders">
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">이름</th>
+                <th scope="col">관심분야</th>
+                <th scope="col">희망사유</th>
+                <th scope="col">전화번호</th>
+            </tr>
+            </thead>
+            <tbody id="orders-box">
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
